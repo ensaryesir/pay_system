@@ -85,7 +85,16 @@ web_modules/
 
 # Next.js build output
 .next
-out
+/out/
+
+# Next.js specific
+/.next/
+.vercel
+.vscode
+*.pem
+
+# Local env files
+.env*.local
 
 # Nuxt.js build / generate output
 .nuxt
