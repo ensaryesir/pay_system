@@ -5,14 +5,13 @@ const blogData: Blog[] = [
     id: 10,
     title: "Derneğimizin Yıllık Genel Kurul Toplantısı",
     paragraph:
-      "2024 yılı Genel Kurul Toplantımız tüm üyelerimizin katılımıyla gerçekleştirildi. Önemli kararlar alındı. Önemli kararlar alındı.Önemli kararlar alındı.Önemli kararlar alındı.Önemli kararlar alındı.",
+      "2024 yılı Genel Kurul Toplantımız tüm üyelerimizin katılımıyla gerçekleştirildi. Önemli kararlar alındı.",
     image: "/images/blog/blog-01.jpg",
     author: {
       name: "Ahmet Yılmaz",
       image: "/images/blog/author-01.png",
       designation: "Dernek Başkanı",
     },
-    tags: ["genel-kurul"],
     publishDate: "2024",
   },
   {
@@ -26,7 +25,6 @@ const blogData: Blog[] = [
       image: "/images/blog/author-02.png",
       designation: "Proje Koordinatörü",
     },
-    tags: ["sosyal-yardım"],
     publishDate: "2024",
   },
   {
@@ -40,7 +38,6 @@ const blogData: Blog[] = [
       image: "/images/blog/author-03.png",
       designation: "Etkinlik Sorumlusu",
     },
-    tags: ["kültür-sanat"],
     publishDate: "2024",
   },
   {
@@ -54,7 +51,6 @@ const blogData: Blog[] = [
       image: "/images/blog/author-02.png",
       designation: "Festival Koordinatörü",
     },
-    tags: ["festival"],
     publishDate: "2024",
   },
   {
@@ -68,7 +64,6 @@ const blogData: Blog[] = [
       image: "/images/blog/author-03.png",
       designation: "Eğitim Koordinatörü",
     },
-    tags: ["workshop"],
     publishDate: "2024",
   },
   {
@@ -82,7 +77,6 @@ const blogData: Blog[] = [
       image: "/images/blog/author-01.png",
       designation: "Sergi Küratörü",
     },
-    tags: ["sergi"],
     publishDate: "2024",
   },
   {
@@ -96,7 +90,6 @@ const blogData: Blog[] = [
       image: "/images/blog/author-02.png",
       designation: "Gençlik Koordinatörü",
     },
-    tags: ["gençlik"],
     publishDate: "2024",
   },
   {
@@ -110,7 +103,6 @@ const blogData: Blog[] = [
       image: "/images/blog/author-03.png",
       designation: "Mutfak Şefi",
     },
-    tags: ["mutfak-kültürü"],
     publishDate: "2024",
   },
   {
@@ -124,7 +116,6 @@ const blogData: Blog[] = [
       image: "/images/blog/author-01.png",
       designation: "Proje Yöneticisi",
     },
-    tags: ["restorasyon"],
     publishDate: "2024",
   },
 ];

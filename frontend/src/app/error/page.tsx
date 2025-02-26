@@ -3,9 +3,17 @@ import Link from "next/link";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Error Page | Free Next.js Template for Startup and SaaS",
-  description: "This is Error Page for Startup Nextjs Template",
-  // other metadata
+  title: "Hata Sayfası | Uluslararası Kültür ve Turizm Derneği",
+  description: "Uluslararası Kültür ve Turizm Derneği sitesinde bir hata oluştu. Lütfen ana sayfaya dönün veya bizimle iletişime geçin.",
+  keywords: ["hata", "sayfa bulunamadı", "teknik sorun", "uluslararası dernek", "kültür ve turizm"],
+  authors: [{ name: "Uluslararası Kültür ve Turizm Derneği", url: "https://ornekdernek.com" }],
+  openGraph: {
+    type: "website",
+    url: "https://ornekdernek.com/hata",
+    title: "Hata Sayfası | Uluslararası Kültür ve Turizm Derneği",
+    description: "Bir şeyler ters gitti. Ana sayfaya dönerek kültürel içerikleri keşfetmeye devam edin.",
+    siteName: "Uluslararası Kültür ve Turizm Derneği",
+  },
 };
 
 const ErrorPage = () => {
@@ -142,17 +150,16 @@ const ErrorPage = () => {
                   </svg>
                 </div>
                 <h3 className="mb-4 text-3xl font-bold text-black dark:text-white sm:text-4xl">
-                  Sorry, the page can’t be found
+                  Üzgünüz, sayfa bulunamadı
                 </h3>
                 <p className="mb-10 text-base font-medium leading-relaxed text-body-color sm:text-lg sm:leading-relaxed">
-                  The page you were looking for appears to have been moved,
-                  deleted or does not exist.
+                  Aradığınız sayfa taşınmış, silinmiş veya mevcut değil.
                 </p>
                 <Link
                   href="/"
                   className="px-8 py-3 text-base font-bold text-white duration-300 rounded-md bg-primary shadow-signUp hover:bg-white hover:text-primary md:px-9 lg:px-8 xl:px-9"
                 >
-                  Back to Homepage
+                  Ana Sayfaya Dön
                 </Link>
               </div>
             </div>

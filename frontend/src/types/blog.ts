@@ -10,6 +10,5 @@ export type Blog = {
   paragraph: string;
   image: string;
   author: Author;
-  tags: string[];
   publishDate: string;
 };

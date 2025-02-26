@@ -5,9 +5,28 @@ import Image from "next/image";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Blog Details Page | Free Next.js Template for Startup and SaaS",
-  description: "This is Blog Details Page for Startup Nextjs Template",
-  // other metadata
+  title: "{{Haber Başlığı}} | Uluslararası Kültür ve Turizm Haberleri",
+  description: "Uluslararası Kültür ve Turizm Derneği'nin güncel haberleri ve etkinlik duyuruları. Kültürel projeler, turizm işbirlikleri ve global etkinlikler hakkında detaylar.",
+  keywords: [
+    "kültür haberleri", 
+    "turizm etkinlikleri",
+    "uluslararası projeler",
+    "kültürel miras",
+    "haber detay",
+    "dernek duyuruları"
+  ],
+  authors: [{ name: "Uluslararası Kültür ve Turizm Derneği", url: "https://ornekdernek.com" }],
+  openGraph: {
+    type: "article",
+    url: "https://ornekdernek.com/haberler/{{haber-slug}}", // Dinamik URL
+    title: "{{Haber Başlığı}} | Kültür-Turizm Gündemi",
+    description: "{{Haber Özeti}} Uluslararası Kültür ve Turizm Derneği ile güncel gelişmeleri takip edin.",
+    publishedTime: "{{2023-09-20T15:30:00+03:00}}", // Dinamik tarih
+    images: [{ url: "/haber-gorselleri/{{haber-slug}}.jpg" }]
+  },
+  alternates: {
+    canonical: "https://ornekdernek.com/haberler/{{haber-slug}}" // SEO için canonical URL
+  }
 };
 
 const BlogDetailsPage = () => {
@@ -62,21 +81,6 @@ const BlogDetailsPage = () => {
                         </span>
                         12 Jan 2024
                       </p>
-                      <p className="mr-5 flex items-center text-base font-medium text-body-color">
-                        <span className="mr-3">
-                          <svg
-                            width="18"
-                            height="13"
-                            viewBox="0 0 18 13"
-                            className="fill-current"
-                          >
-                            <path d="M15.6375 0H1.6875C0.759375 0 0 0.759375 0 1.6875V10.6875C0 11.3062 0.309375 11.8406 0.84375 12.15C1.09687 12.2906 1.40625 12.375 1.6875 12.375C1.96875 12.375 2.25 12.2906 2.53125 12.15L5.00625 10.7156C5.11875 10.6594 5.23125 10.6312 5.34375 10.6312H15.6094C16.5375 10.6312 17.2969 9.87187 17.2969 8.94375V1.6875C17.325 0.759375 16.5656 0 15.6375 0ZM16.3406 8.94375C16.3406 9.3375 16.0312 9.64687 15.6375 9.64687H5.37187C5.09062 9.64687 4.78125 9.73125 4.52812 9.87187L2.05313 11.3063C1.82812 11.4187 1.575 11.4187 1.35 11.3063C1.125 11.1938 1.0125 10.9688 1.0125 10.7156V1.6875C1.0125 1.29375 1.32188 0.984375 1.71563 0.984375H15.6656C16.0594 0.984375 16.3687 1.29375 16.3687 1.6875V8.94375H16.3406Z" />
-                            <path d="M12.2342 3.375H4.69668C4.41543 3.375 4.19043 3.6 4.19043 3.88125C4.19043 4.1625 4.41543 4.3875 4.69668 4.3875H12.2623C12.5435 4.3875 12.7685 4.1625 12.7685 3.88125C12.7685 3.6 12.5154 3.375 12.2342 3.375Z" />
-                            <path d="M11.0529 6.55322H4.69668C4.41543 6.55322 4.19043 6.77822 4.19043 7.05947C4.19043 7.34072 4.41543 7.56572 4.69668 7.56572H11.0811C11.3623 7.56572 11.5873 7.34072 11.5873 7.05947C11.5873 6.77822 11.3342 6.55322 11.0529 6.55322Z" />
-                          </svg>
-                        </span>
-                        50
-                      </p>
                       <p className="flex items-center text-base font-medium text-body-color">
                         <span className="mr-3">
                           <svg
@@ -92,14 +96,6 @@ const BlogDetailsPage = () => {
                         35
                       </p>
                     </div>
-                  </div>
-                  <div className="mb-5">
-                    <a
-                      href="#0"
-                      className="inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white"
-                    >
-                      Design
-                    </a>
                   </div>
                 </div>
                 <div>
@@ -316,17 +312,7 @@ const BlogDetailsPage = () => {
                   </p>
                   <div className="items-center justify-between sm:flex">
                     <div className="mb-5">
-                      <h4 className="mb-3 text-sm font-medium text-body-color">
-                        Popular Tags :
-                      </h4>
-                      <div className="flex items-center">
-                        <TagButton text="Design" />
-                        <TagButton text="Development" />
-                        <TagButton text="Info" />
-                      </div>
-                    </div>
-                    <div className="mb-5">
-                      <h5 className="mb-3 text-sm font-medium text-body-color sm:text-right">
+                      <h5 className="mb-3 text-sm font-medium text-body-color">
                         Share this post :
                       </h5>
                       <div className="flex items-center sm:justify-end">

@@ -12,9 +12,17 @@ import Video from "@/components/Video";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Uluslararasi Kultur ve Turizm Dernegi",
-  description: "Discover and book authentic cultural experiences with local heritage experts and guides",
-  // other metadata
+  title: "Uluslararası Kültür ve Turizm Derneği | Kültürel Keşifler ve Turizm",
+  description: "Uluslararası Kültür ve Turizm Derneği ile yerel kültürel miras uzmanları ve rehberler eşliğinde otantik deneyimler keşfedin.",
+  keywords: ["kültür", "turizm", "uluslararası dernek", "kültürel miras", "seyahat", "rehberli turlar"],
+  authors: [{ name: "Uluslararası Kültür ve Turizm Derneği", url: "https://ornekdernek.com" }],
+  openGraph: {
+    type: "website",
+    url: "https://ornekdernek.com",
+    title: "Uluslararası Kültür ve Turizm Derneği",
+    description: "Kültürel miras ve turizm deneyimlerini keşfedin.",
+    siteName: "Uluslararası Kültür ve Turizm Derneği",
+  },
 };
 
 export default function Home() {
