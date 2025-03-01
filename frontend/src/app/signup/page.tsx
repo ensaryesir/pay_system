@@ -1,22 +1,75 @@
+"use client";
+
 import Link from "next/link";
-
-import { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Kayıt Ol | Uluslararası Kültür ve Turizm Derneği",
-  description: "Uluslararası Kültür ve Turizm Derneği'ne üye olun ve kültürel etkinliklere erişim sağlayın.",
-  keywords: ["kayıt ol", "üyelik", "kültür derneği", "turizm etkinlikleri", "üye kaydı"],
-  authors: [{ name: "Uluslararası Kültür ve Turizm Derneği", url: "https://ornekdernek.com" }],
-  openGraph: {
-    type: "website",
-    url: "https://ornekdernek.com/kayit-ol",
-    title: "Kayıt Ol | Uluslararası Kültür ve Turizm Derneği",
-    description: "Kültürel etkinliklere katılmak için dernek üyeliğinizi başlatın.",
-    siteName: "Uluslararası Kültür ve Turizm Derneği",
-  },
-};
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { register } from '@/services/auth';
 
 const SignupPage = () => {
+  const router = useRouter();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    acceptTerms: false
+  });
+  const [error, setError] = useState('');
+
+  const handleChange = (e: any) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!formData.name.trim()) {
+      setError('Lütfen adınızı giriniz.');
+      return;
+    }
+
+    if (!formData.email.trim()) {
+      setError('Lütfen e-posta adresinizi giriniz.');
+      return;
+    }
+
+    if (!formData.password.trim()) {
+      setError('Lütfen şifrenizi giriniz.');
+      return;
+    }
+
+    if (!formData.acceptTerms) {
+      setError('Lütfen kullanım koşullarını ve gizlilik politikasını kabul edin.');
+      return;
+    }
+
+    try {
+      const response = await register({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password
+      });
+
+      if (response.success) {
+        router.push('/signin');
+      } else {
+        setError(response.message || 'Kayıt işlemi başarısız oldu. Lütfen bilgilerinizi kontrol ediniz.');
+      }
+    } catch (err) {
+      setError('Bir hata oluştu. Lütfen daha sonra tekrar deneyiniz.');
+      console.error('Registration error:', err);
+    }
+  };
+
+  const handleGoogleSignup = () => {
+    // Implement Google signup functionality
+    console.log('Google signup clicked');
+  };
+
   return (
     <>
       <section className="relative z-10 overflow-hidden pb-16 pt-36 md:pb-20 lg:pb-28 lg:pt-[180px]">
@@ -30,7 +83,15 @@ const SignupPage = () => {
                 <p className="mb-6 text-center text-base font-medium text-body-color">
                   Tamamen ücretsiz ve çok kolay
                 </p>
-                <button className="border-stroke dark:text-body-color-dark dark:shadow-two mb-6 flex w-full items-center justify-center rounded-sm border bg-[#f8f8f8] px-6 py-3 text-base text-body-color outline-none transition-all duration-300 hover:border-primary hover:bg-primary/5 hover:text-primary dark:border-transparent dark:bg-[#2C303B] dark:hover:border-primary dark:hover:bg-primary/5 dark:hover:text-primary dark:hover:shadow-none">
+                {error && (
+                  <div className="mb-6 text-center text-red-500">
+                    {error}
+                  </div>
+                )}
+                <button
+                  onClick={handleGoogleSignup}
+                  className="border-stroke dark:text-body-color-dark dark:shadow-two mb-6 flex w-full items-center justify-center rounded-sm border bg-[#f8f8f8] px-6 py-3 text-base text-body-color outline-none transition-all duration-300 hover:border-primary hover:bg-primary/5 hover:text-primary dark:border-transparent dark:bg-[#2C303B] dark:hover:border-primary dark:hover:bg-primary/5 dark:hover:text-primary dark:hover:shadow-none"
+                >
                   <span className="mr-3">
                     <svg
                       width="20"
@@ -73,20 +134,22 @@ const SignupPage = () => {
                   </p>
                   <span className="hidden h-[1px] w-full max-w-[60px] bg-body-color/50 sm:block"></span>
                 </div>
-                <form>
+                <form onSubmit={handleSubmit}>
                   <div className="mb-8">
                     <label
                       htmlFor="name"
                       className="mb-3 block text-sm text-dark dark:text-white"
                     >
-                      {" "}
-                      Tam Adınız{" "}
+                      Tam Adınız
                     </label>
                     <input
                       type="text"
                       name="name"
+                      value={formData.name}
+                      onChange={handleChange}
                       placeholder="Tam adınızı girin"
                       className="border-stroke dark:text-body-color-dark dark:shadow-two w-full rounded-sm border bg-[#f8f8f8] px-6 py-3 text-base text-body-color outline-none transition-all duration-300 focus:border-primary dark:border-transparent dark:bg-[#2C303B] dark:focus:border-primary dark:focus:shadow-none"
+                      required
                     />
                   </div>
                   <div className="mb-8">
@@ -94,14 +157,16 @@ const SignupPage = () => {
                       htmlFor="email"
                       className="mb-3 block text-sm text-dark dark:text-white"
                     >
-                      {" "}
-                      E-posta Adresiniz{" "}
+                      E-posta Adresiniz
                     </label>
                     <input
                       type="email"
                       name="email"
+                      value={formData.email}
+                      onChange={handleChange}
                       placeholder="E-posta adresinizi girin"
                       className="border-stroke dark:text-body-color-dark dark:shadow-two w-full rounded-sm border bg-[#f8f8f8] px-6 py-3 text-base text-body-color outline-none transition-all duration-300 focus:border-primary dark:border-transparent dark:bg-[#2C303B] dark:focus:border-primary dark:focus:shadow-none"
+                      required
                     />
                   </div>
                   <div className="mb-8">
@@ -109,29 +174,34 @@ const SignupPage = () => {
                       htmlFor="password"
                       className="mb-3 block text-sm text-dark dark:text-white"
                     >
-                      {" "}
-                      Şifreniz{" "}
+                      Şifreniz
                     </label>
                     <input
                       type="password"
                       name="password"
+                      value={formData.password}
+                      onChange={handleChange}
                       placeholder="Şifrenizi girin"
                       className="border-stroke dark:text-body-color-dark dark:shadow-two w-full rounded-sm border bg-[#f8f8f8] px-6 py-3 text-base text-body-color outline-none transition-all duration-300 focus:border-primary dark:border-transparent dark:bg-[#2C303B] dark:focus:border-primary dark:focus:shadow-none"
+                      required
                     />
                   </div>
                   <div className="mb-8 flex">
                     <label
-                      htmlFor="checkboxLabel"
+                      htmlFor="acceptTerms"
                       className="flex cursor-pointer select-none text-sm font-medium text-body-color"
                     >
                       <div className="relative">
                         <input
                           type="checkbox"
-                          id="checkboxLabel"
+                          id="acceptTerms"
+                          name="acceptTerms"
+                          checked={formData.acceptTerms}
+                          onChange={handleChange}
                           className="sr-only"
                         />
                         <div className="box mr-4 mt-1 flex h-5 w-5 items-center justify-center rounded border border-body-color border-opacity-20 dark:border-white dark:border-opacity-10">
-                          <span className="opacity-0">
+                          <span className={`opacity-${formData.acceptTerms ? '100' : '0'}`}>
                             <svg
                               width="11"
                               height="8"
@@ -164,7 +234,10 @@ const SignupPage = () => {
                     </label>
                   </div>
                   <div className="mb-6">
-                    <button className="shadow-submit dark:shadow-submit-dark flex w-full items-center justify-center rounded-sm bg-primary px-9 py-4 text-base font-medium text-white duration-300 hover:bg-primary/90">
+                    <button
+                      type="submit"
+                      className="shadow-submit dark:shadow-submit-dark flex w-full items-center justify-center rounded-sm bg-primary px-9 py-4 text-base font-medium text-white duration-300 hover:bg-primary/90"
+                    >
                       Kayıt Ol
                     </button>
                   </div>

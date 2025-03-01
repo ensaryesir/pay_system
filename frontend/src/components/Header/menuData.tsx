@@ -14,30 +14,36 @@ const menuData: Menu[] = [
     newTab: false,
   },
   {
-    id: 33,
+    id: 3,
     title: "Haberler",
     path: "/blog",
     newTab: false,
   },
   {
-    id: 3,
+    id: 4,
+    title: "Fiyatlandırma",
+    path: "/pricing",
+    newTab: false,
+  },
+  {
+    id: 5,
     title: "İletişim",
     path: "/contact",
     newTab: false,
   },
   {
-    id: 4,
+    id: 6,
     title: "Sayfalar",
     newTab: false,
     submenu: [
       {
-        id: 44,
+        id: 61,
         title: "Blog Detay Sayfası",
         path: "/blog-details",
         newTab: false,
       },
       {
-        id: 47,
+        id: 62,
         title: "Hata Sayfası",
         path: "/error",
         newTab: false,
