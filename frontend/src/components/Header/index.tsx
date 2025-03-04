@@ -5,14 +5,59 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import ThemeToggler from "./ThemeToggler";
 import menuData from "./menuData";
+import { useRouter } from "next/navigation";
 
 const Header = () => {
+  const router = useRouter();
   // Navbar toggle
   const [navbarOpen, setNavbarOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userName, setUserName] = useState("");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
   const navbarToggleHandler = () => {
     setNavbarOpen(!navbarOpen);
   };
 
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setIsAuthenticated(false);
+    setUserName("");
+    setDropdownOpen(false);
+    router.push("/");
+  };
+  
+  useEffect(() => {
+    const checkAuth = () => {
+      const user = localStorage.getItem("user");
+      if (user) {
+        try {
+          const userData = JSON.parse(user);
+          setIsAuthenticated(true);
+          setUserName(userData.name);
+        } catch (error) {
+          console.error("Error parsing user data:", error);
+          localStorage.removeItem("user");
+        }
+      } else {
+        setIsAuthenticated(false);
+        setUserName("");
+      }
+    };
+    
+    checkAuth();
+    
+    // Add event listener for storage changes
+    window.addEventListener("storage", checkAuth);
+    
+    return () => {
+      window.removeEventListener("storage", checkAuth);
+    };
+  }, []);
   // Sticky Navbar
   const [sticky, setSticky] = useState(false);
   const handleStickyNavbar = () => {
@@ -159,18 +204,66 @@ const Header = () => {
                 </nav>
               </div>
               <div className="flex items-center justify-end pr-16 lg:pr-0">
-                <Link
-                  href="/signin"
-                  className="hidden px-7 py-3 text-base font-medium text-dark hover:opacity-70 dark:text-white md:block"
-                >
-                  Giriş Yap
-                </Link>
-                <Link
-                  href="/signup"
-                  className="ease-in-up shadow-btn hover:shadow-btn-hover hidden rounded-sm bg-primary px-8 py-3 text-base font-medium text-white transition duration-300 hover:bg-opacity-90 md:block md:px-9 lg:px-6 xl:px-9"
-                >
-                  Kayıt Ol
-                </Link>
+                {!isAuthenticated ? (
+                  <>
+                    <Link
+                      href="/signin"
+                      className="hidden px-7 py-3 text-base font-medium text-dark hover:opacity-70 dark:text-white md:block"
+                    >
+                      Giriş Yap
+                    </Link>
+                    <Link
+                      href="/signup"
+                      className="ease-in-up shadow-btn hover:shadow-btn-hover hidden rounded-sm bg-primary px-8 py-3 text-base font-medium text-white transition duration-300 hover:bg-opacity-90 md:block md:px-9 lg:px-6 xl:px-9"
+                    >
+                      Kayıt Ol
+                    </Link>
+                  </>
+                ) : (
+                  <div className="relative">
+                    <button
+                      onClick={toggleDropdown}
+                      className="flex items-center space-x-2 px-7 py-3 text-base font-medium text-dark hover:opacity-70 dark:text-white"
+                    >
+                      <span>{userName}</span>
+                      <svg
+                        className={`h-5 w-5 transform transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+                    {dropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-48 rounded-md bg-white py-2 shadow-lg dark:bg-dark">
+                        <Link
+                          href="/account"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-800"
+                        >
+                          Hesap Ayarları
+                        </Link>
+                        <Link
+                          href="/admin"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-800"
+                        >
+                          Yönetim Paneli
+                        </Link>
+                        <button
+                          onClick={handleLogout}
+                          className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        >
+                          Çıkış Yap
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div>
                   <ThemeToggler />
                 </div>

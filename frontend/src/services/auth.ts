@@ -11,12 +11,17 @@ interface RegisterData {
 interface LoginData {
   email: string;
   password: string;
+  rememberMe?: boolean;
 }
 
 interface AuthResponse {
   success: boolean;
   token?: string;
   message?: string;
+  user?: {
+    name: string;
+    email: string;
+  };
 }
 
 export const register = async (userData: RegisterData): Promise<AuthResponse> => {
@@ -35,7 +40,9 @@ export const login = async (userData: LoginData): Promise<AuthResponse> => {
   try {
     const response = await axios.post(`${API_URL}/auth/login`, userData);
     if (response.data.success && response.data.token) {
-      localStorage.setItem('token', response.data.token);
+      const storage = userData.rememberMe ? localStorage : sessionStorage;
+      storage.setItem('token', response.data.token);
+      storage.setItem('user', JSON.stringify(response.data.user));
     }
     return response.data;
   } catch (error: any) {

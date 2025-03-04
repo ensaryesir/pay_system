@@ -47,18 +47,26 @@ router.post('/register', async (req, res) => {
 
 // Login user
 router.post('/login', async (req, res) => {
+  console.log('Login request received:', { email: req.body.email, timestamp: new Date().toISOString() });
+
   try {
     const { email, password } = req.body;
 
     // Find user by email
     const user = await User.findOne({ email });
+    console.log('User lookup result:', { found: !!user, email });
+
     if (!user) {
+      console.log('Login failed: User not found', { email });
       return res.status(401).json({ message: 'Geçersiz e-posta veya şifre. Lütfen bilgilerinizi kontrol ediniz.' });
     }
 
     // Check password
     const isMatch = await user.comparePassword(password);
+    console.log('Password verification:', { email, isMatch });
+
     if (!isMatch) {
+      console.log('Login failed: Invalid password', { email });
       return res.status(401).json({ message: 'Geçersiz e-posta veya şifre. Lütfen bilgilerinizi kontrol ediniz.' });
     }
 
@@ -69,7 +77,10 @@ router.post('/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
+    console.log('Login successful:', { email, userId: user._id });
+
     res.json({
+      success: true,
       message: 'Giriş başarılı',
       token,
       user: {
@@ -80,7 +91,10 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Giriş başarısız oldu. Lütfen tekrar deneyiniz.' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Giriş başarısız oldu. Lütfen tekrar deneyiniz.' 
+    });
   }
 });
 

@@ -36,23 +36,24 @@ const SigninPage = () => {
         email: formData.email,
         password: formData.password
       });
-
-      if (response.success) {
-        router.push('/');
-      } else {
-        setError(response.message || 'Giriş başarısız. Lütfen bilgilerinizi kontrol ediniz.');
-      }
+    if (response.success) {
+      // Store user data in localStorage
+      localStorage.setItem('user', JSON.stringify(response.user));
+      // Trigger storage event for other tabs
+      window.dispatchEvent(new Event('storage'));
+      router.push('/');
+    } else {
+      setError(response.message || 'Giriş başarısız. Lütfen bilgilerinizi kontrol ediniz.');
+    }
     } catch (err) {
       setError('Bir hata oluştu. Lütfen daha sonra tekrar deneyiniz.');
       console.error('Login error:', err);
     }
   };
-
   const handleGoogleLogin = () => {
     // Implement Google login functionality
     console.log('Google login clicked');
   };
-
   return (
     <>
       <section className="relative z-10 overflow-hidden pb-16 pt-36 md:pb-20 lg:pb-28 lg:pt-[180px]">
