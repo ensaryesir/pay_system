@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import ThemeToggler from "./ThemeToggler";
 import menuData from "./menuData";
 import { useRouter } from "next/navigation";
+import { logout } from "@/services/auth";
 
 const Header = () => {
   const router = useRouter();
@@ -24,26 +25,42 @@ const Header = () => {
     setDropdownOpen(!dropdownOpen);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    setIsAuthenticated(false);
-    setUserName("");
-    setDropdownOpen(false);
-    router.push("/");
+  const handleLogout = async () => {
+    try {
+      // Use the proper logout function from auth service
+      await logout();
+      
+      // Update UI state
+      setIsAuthenticated(false);
+      setUserName("");
+      setUserRole("");
+      setDropdownOpen(false);
+      
+      // Navigate to home page
+      router.push("/");
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Even if there's an error, still update UI state
+      setIsAuthenticated(false);
+      setUserName("");
+      setUserRole("");
+      setDropdownOpen(false);
+      router.push("/");
+    }
   };
   
   useEffect(() => {
     const checkAuth = () => {
-      const user = localStorage.getItem("user");
+      const user = localStorage.getItem("user") || sessionStorage.getItem("user");
       if (user) {
         try {
           const userData = JSON.parse(user);
           setIsAuthenticated(true);
           setUserName(userData.name);
-          setUserRole(userData.role);
+          setUserRole(userData.role || "");
         } catch (error) {
           console.error("Error parsing user data:", error);
-          localStorage.removeItem("user");
+          logout();
           setIsAuthenticated(false);
           setUserName("");
           setUserRole("");
@@ -55,15 +72,21 @@ const Header = () => {
       }
     };
     
+    // Initial check
     checkAuth();
     
-    // Add event listener for storage changes
-    window.addEventListener("storage", checkAuth);
-    
-    return () => {
-      window.removeEventListener("storage", checkAuth);
+    // Add event listener for storage changes (for multi-tab synchronization)
+    const handleStorageChange = () => {
+      checkAuth();
     };
-  }, []);
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Clean up event listener on component unmount
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [usePathname()]);
   // Sticky Navbar
   const [sticky, setSticky] = useState(false);
   const handleStickyNavbar = () => {
@@ -264,7 +287,7 @@ const Header = () => {
                         )}
                         {userRole === 'superuser' && (
                           <Link
-                            href="/admin/users"
+                            href="/users"
                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-800"
                           >
                             Üyeleri Görüntüle

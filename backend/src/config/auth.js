@@ -12,9 +12,13 @@ if (!JWT_SECRET || !JWT_EXPIRE) {
   throw new Error('JWT_SECRET and JWT_EXPIRE must be defined in environment variables');
 }
 
+// Simple in-memory token blacklist
+// In a production app, this should be in Redis or another persistent store
+const tokenBlacklist = new Set();
+
 // Generate JWT Token
 const generateToken = (id) => {
-  return jwt.sign({ id }, JWT_SECRET, {
+  return jwt.sign({ userId: id }, JWT_SECRET, {
     expiresIn: JWT_EXPIRE
   });
 };
@@ -22,14 +26,46 @@ const generateToken = (id) => {
 // Verify JWT Token
 const verifyToken = (token) => {
   try {
-    return jwt.verify(token, JWT_SECRET);
+    // Check if token is blacklisted
+    if (tokenBlacklist.has(token)) {
+      console.log('Token is blacklisted');
+      return null;
+    }
+    
+    // Log token information for debugging (only partial token for security)
+    const tokenPreview = token.substring(0, 15) + '...';
+    //console.log(`Verifying token: ${tokenPreview}`);
+    
+    const decoded = jwt.verify(token, JWT_SECRET);
+    //console.log('Token successfully verified:', {
+    //  userId: decoded.userId || decoded.id,
+    //  exp: decoded.exp ? new Date(decoded.exp * 1000).toISOString() : 'undefined'
+    //});
+    
+    return decoded;
   } catch (error) {
+    console.error('Token verification failed:', {
+      name: error.name,
+      message: error.message,
+      token: token ? token.substring(0, 10) + '...' : 'undefined'
+    });
     return null;
   }
+};
+
+// Invalidate a token by adding it to the blacklist
+const invalidateToken = (token) => {
+  if (token) {
+    tokenBlacklist.add(token);
+    console.log(`Token blacklisted: ${token.substring(0, 10)}...`);
+    return true;
+  }
+  return false;
 };
 
 module.exports = {
   generateToken,
   verifyToken,
+  invalidateToken,
   JWT_SECRET
 };

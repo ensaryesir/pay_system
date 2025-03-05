@@ -13,6 +13,7 @@ const SigninPage = () => {
     rememberMe: false
   });
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e: any) => {
     const { name, value, type, checked } = e.target;
@@ -25,35 +26,45 @@ const SigninPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
 
     if (!formData.email || !formData.password) {
       setError('Lütfen e-posta ve şifrenizi giriniz.');
+      setIsLoading(false);
       return;
     }
 
     try {
       const response = await login({
         email: formData.email,
-        password: formData.password
+        password: formData.password,
+        rememberMe: formData.rememberMe
       });
-    if (response.success) {
-      // Store user data in localStorage
-      localStorage.setItem('user', JSON.stringify(response.user));
-      // Trigger storage event for other tabs
-      window.dispatchEvent(new Event('storage'));
-      router.push('/');
-    } else {
-      setError(response.message || 'Giriş başarısız. Lütfen bilgilerinizi kontrol ediniz.');
-    }
+
+      if (response.success) {
+        // Login işlemi başarılı, ana sayfaya yönlendir
+        // localStorage işlemi login fonksiyonunda yapılıyor, burada tekrar yapmaya gerek yok
+        
+        // Yönlendirmeden önce kısa bir bekleme süresi ekle (UI için)
+        setTimeout(() => {
+          router.push('/');
+        }, 300);
+      } else {
+        setError(response.message || 'Giriş başarısız. Lütfen bilgilerinizi kontrol ediniz.');
+        setIsLoading(false);
+      }
     } catch (err) {
-      setError('Bir hata oluştu. Lütfen daha sonra tekrar deneyiniz.');
       console.error('Login error:', err);
+      setError('Bir hata oluştu. Lütfen daha sonra tekrar deneyiniz.');
+      setIsLoading(false);
     }
   };
+
   const handleGoogleLogin = () => {
     // Implement Google login functionality
     console.log('Google login clicked');
   };
+
   return (
     <>
       <section className="relative z-10 overflow-hidden pb-16 pt-36 md:pb-20 lg:pb-28 lg:pt-[180px]">
@@ -182,8 +193,22 @@ const SigninPage = () => {
                     </div>
                   </div>
                   <div className="mb-6">
-                    <button type="submit" className="shadow-submit dark:shadow-submit-dark flex w-full items-center justify-center rounded-sm bg-primary px-9 py-4 text-base font-medium text-white duration-300 hover:bg-primary/90">
-                      Giriş Yap
+                    <button
+                      type="submit"
+                      className="w-full inline-flex justify-center py-4 px-6 rounded bg-primary text-white text-base font-medium hover:bg-opacity-90 transition duration-300 ease-in-out"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <span className="flex items-center">
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Giriş Yapılıyor...
+                        </span>
+                      ) : (
+                        "Giriş Yap"
+                      )}
                     </button>
                   </div>
                 </form>
