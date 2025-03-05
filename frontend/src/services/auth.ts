@@ -21,6 +21,7 @@ interface AuthResponse {
   user?: {
     name: string;
     email: string;
+    role: string;
   };
 }
 
@@ -55,6 +56,9 @@ export const login = async (userData: LoginData): Promise<AuthResponse> => {
 
 export const logout = (): void => {
   localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  sessionStorage.removeItem('token');
+  sessionStorage.removeItem('user');
 };
 
 export const getToken = (): string | null => {
