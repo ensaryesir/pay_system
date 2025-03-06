@@ -1,58 +1,72 @@
-import { Blog } from "@/types/blog";
-import Image from "next/image";
+import { Blog } from "@/services/blog";
 import Link from "next/link";
+import Image from "next/image";
 
 const SingleBlog = ({ blog }: { blog: Blog }) => {
-  const { title, image, paragraph, author, publishDate } = blog;
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('tr-TR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  // İçerik için güvenli kontrol
+  const truncateContent = (content: string | undefined) => {
+    if (!content) return '';
+    return content.length > 150 ? `${content.substring(0, 150)}...` : content;
+  };
+
   return (
-    <>
-      <div className="group relative overflow-hidden rounded-sm bg-white shadow-one duration-300 hover:shadow-two dark:bg-dark dark:hover:shadow-gray-dark">
-        <Link
-          href="/blog-details"
-          className="relative block aspect-[37/22] w-full"
-        >
-          <Image src={image} alt="image" fill />
-        </Link>
-        <div className="p-6 sm:p-8 md:px-6 md:py-8 lg:p-8 xl:px-5 xl:py-8 2xl:p-8">
-          <h3>
-            <Link
-              href="/blog-details"
-              className="mb-4 block text-xl font-bold text-black hover:text-primary dark:text-white dark:hover:text-primary sm:text-2xl"
-            >
-              {title}
-            </Link>
-          </h3>
-          <div className="mb-6 border-b border-body-color border-opacity-10 pb-6 dark:border-white dark:border-opacity-10">
-            {/*belli satiri gosterme */}
-            <p className="text-base font-medium text-body-color line-clamp-3">
-              {paragraph.split('\n').slice(0, 3).join('\n')}
-              {paragraph.split('\n').length > 3 && '...'}  
-            </p>
+    <div className="group relative overflow-hidden rounded-sm bg-white shadow-one duration-300 hover:shadow-two dark:bg-dark dark:hover:shadow-gray-dark">
+      <Link
+        href={`/blog/${blog._id}`}
+        className="relative block aspect-[37/22] w-full"
+      >
+        <Image
+          src={blog.image || '/images/blog-placeholder.jpg'}
+          alt={blog.title || 'Blog Görseli'}
+          fill
+          className="object-cover object-center"
+        />
+      </Link>
+      <div className="p-6 sm:p-8 md:py-8 md:px-6 lg:p-8 xl:py-8 xl:px-5 2xl:p-8">
+        <h3>
+          <Link
+            href={`/blog/${blog._id}`}
+            className="mb-4 block text-xl font-bold text-black hover:text-primary dark:text-white dark:hover:text-primary sm:text-2xl"
+          >
+            {blog.title || 'Başlıksız Haber'}
+          </Link>
+        </h3>
+        <p className="mb-6 border-b border-body-color border-opacity-10 pb-6 text-base text-body-color dark:border-white dark:border-opacity-10 dark:text-body-color-dark">
+          {truncateContent(blog.content)}
+        </p>
+        <div className="flex flex-col space-y-4">
+          <div className="flex items-center text-sm text-body-color dark:text-body-color-dark">
+            <span className="font-medium text-dark dark:text-white">
+              {blog.author?.name || 'Anonim'}
+            </span>
+            <span className="mx-2">•</span>
+            <span>{blog.createdAt ? formatDate(blog.createdAt) : '-'}</span>
           </div>
-          <div className="flex items-center">
-            <div className="mr-5 flex items-center border-r border-body-color border-opacity-10 pr-5 dark:border-white dark:border-opacity-10 xl:mr-3 xl:pr-3 2xl:mr-5 2xl:pr-5">
-              <div className="mr-4">
-                <div className="relative h-10 w-10 overflow-hidden rounded-full">
-                  <Image src={author.image} alt="author" fill />
-                </div>
-              </div>
-              <div className="w-full">
-                <h4 className="mb-1 text-sm font-medium text-dark dark:text-white">
-                  By {author.name}
-                </h4>
-                <p className="text-xs text-body-color">{author.designation}</p>
-              </div>
+          {blog.tags && blog.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              <span className="text-sm text-body-color dark:text-body-color-dark">Etiketler:</span>
+              {blog.tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className="inline-block rounded bg-primary/[.08] px-2 py-1 text-xs text-primary dark:bg-primary/[.06]"
+                >
+                  {tag}
+                </span>
+              ))}
             </div>
-            <div className="inline-block">
-              <h4 className="mb-1 text-sm font-medium text-dark dark:text-white">
-                Date
-              </h4>
-              <p className="text-xs text-body-color">{publishDate}</p>
-            </div>
-          </div>
+          )}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

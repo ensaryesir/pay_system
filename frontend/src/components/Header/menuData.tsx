@@ -31,24 +31,5 @@ const menuData: Menu[] = [
     path: "/contact",
     newTab: false,
   },
-  {
-    id: 6,
-    title: "Sayfalar",
-    newTab: false,
-    submenu: [
-      {
-        id: 61,
-        title: "Blog Detay Sayfası",
-        path: "/blog-details",
-        newTab: false,
-      },
-      {
-        id: 62,
-        title: "Hata Sayfası",
-        path: "/error",
-        newTab: false,
-      },
-    ],
-  },
 ];
 export default menuData;

@@ -81,4 +81,25 @@ const isSuperUser = (req, res, next) => {
   });
 };
 
-module.exports = { protect, isSuperUser };
+const isAdminOrSuperUser = (req, res, next) => {
+  // First ensure user is authenticated by using protect as middleware
+  protect(req, res, (err) => {
+    if (err) return next(err);
+    
+    // Check if user has admin or superuser role
+    if (req.user && (req.user.role === 'admin' || req.user.role === 'superuser')) {
+      next();
+    } else {
+      res.status(403).json({
+        success: false,
+        message: 'Bu sayfaya erişim izniniz bulunmamaktadır'
+      });
+    }
+  });
+};
+
+module.exports = {
+  protect,
+  isSuperUser,
+  isAdminOrSuperUser
+};

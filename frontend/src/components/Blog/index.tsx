@@ -1,22 +1,65 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SectionTitle from "../Common/SectionTitle";
 import SingleBlog from "./SingleBlog";
-import blogData from "./blogData";
+import type { Blog } from "@/services/blog";
+import { getAllBlogs } from "@/services/blog";
+import toast from "react-hot-toast";
 
 const Blog = () => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [loading, setLoading] = useState(true);
   const itemsPerPage = 3;
+
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        const response = await getAllBlogs();
+        if (response.success && response.blogs) {
+          setBlogs(response.blogs);
+        } else {
+          toast.error(response.message || 'Haberler yüklenirken bir hata oluştu');
+        }
+      } catch (error) {
+        toast.error('Haberler yüklenirken bir hata oluştu');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBlogs();
+  }, []);
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = blogData.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(blogData.length / itemsPerPage);
+  const currentItems = blogs.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(blogs.length / itemsPerPage);
 
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber);
   };
+
+  if (loading) {
+    return (
+      <section
+        id="blog"
+        className="bg-gray-light dark:bg-bg-color-dark py-16 md:py-20 lg:py-28"
+      >
+        <div className="container">
+          <SectionTitle
+            title="Güncel Haberler"
+            paragraph="Derneğimizin en güncel haberlerini ve duyurularını burada bulabilirsiniz."
+            center
+          />
+          <div className="flex justify-center items-center min-h-[400px]">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section
@@ -32,14 +75,14 @@ const Blog = () => {
 
         <div className="grid grid-cols-1 gap-x-8 gap-y-10 md:grid-cols-2 md:gap-x-6 lg:gap-x-8 xl:grid-cols-3">
           {currentItems.map((blog) => (
-            <div key={blog.id} className="w-full">
+            <div key={blog._id} className="w-full">
               <SingleBlog blog={blog} />
             </div>
           ))}
         </div>
 
-        <div className="-mx-4 flex flex-wrap" data-wow-delay=".15s">
-          <div className="w-full px-4">
+        {blogs.length > 0 ? (
+          <div className="w-full">
             <ul className="flex items-center justify-center pt-8">
               <li className="mx-1">
                 <button
@@ -71,7 +114,11 @@ const Blog = () => {
               </li>
             </ul>
           </div>
-        </div>
+        ) : (
+          <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
+            Henüz haber bulunmamaktadır.
+          </div>
+        )}
       </div>
     </section>
   );

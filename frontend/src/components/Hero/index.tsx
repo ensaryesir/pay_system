@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const Hero = () => {
   return (
@@ -11,44 +12,73 @@ const Hero = () => {
           <div className="-mx-4 flex flex-wrap">
             <div className="w-full px-4">
               <div className="mx-auto max-w-[800px] text-center">
+                {/* Logo */}
+                <div className="flex justify-center mb-8">
+                  <Image
+                    src="/images/logo/yazili_logo.png"
+                    alt="Uluslararası Kültür Turizm Derneği Logo"
+                    width={300}
+                    height={100}
+                    className="dark:hidden"
+                  />
+                  <Image
+                    src="/images/logo/yazili_logo.png"
+                    alt="Uluslararası Kültür Turizm Derneği Logo"
+                    width={300}
+                    height={100}
+                    className="hidden dark:block"
+                  />
+                </div>
+                
                 <h1 className="mb-5 text-3xl font-bold leading-tight text-black dark:text-white sm:text-4xl sm:leading-tight md:text-5xl md:leading-tight">
-                  ULUSLARARASI KÜLTÜR TURİZM DERNEĞİ'ne Hoş Geldiniz
+                  Kültür Mirasını Koruma ve Yaşatma Misyonumuzla
                 </h1>
                 <div className="mb-12 text-base !leading-relaxed text-body-color dark:text-body-color-dark sm:text-lg md:text-xl">
-                  <p>
-                    <strong>"Sadece turist yetiştirmiyor, kültür elçileri yetiştiriyoruz!"</strong>
+                  <p className="text-primary font-bold text-xl mb-6">
+                    "Sadece turist yetiştirmiyor, kültür elçileri yetiştiriyoruz!"
                   </p>
                   <p className="mt-6">
-                    1980'den bu yana Efes'in mozaik ustalarından Bali'nin geleneksel dansçılarına kadar, 
-                    dünya kültür mirasını yaşatan isimsiz kahramanları bir çatı altında topluyoruz. 
-                    68 ülkede 1200'ü aşkın üyemizle attığımız her adımda; 
-                    tarihi koruyor, yerel ekonomiyi güçlendiriyor ve kültürlerarası köprüler inşa ediyoruz.
+                    1980'den bu yana dünya kültür mirasını yaşatan değerleri bir çatı altında topluyoruz. 
+                    Türkiye'nin zengin kültürel mirasını korumak, tanıtmak ve gelecek nesillere aktarmak için 
+                    çalışıyoruz.
                   </p>
-                  <p className="mt-6 mb-4">
-                    Eşsiz bir sentez sunuyoruz:
+                  <p className="mt-6 mb-4 font-medium">
+                    Derneğimizin temel amaçları:
                   </p>
-                  <ul className="list-none space-y-2 mt-4 mb-4">
-                    <li>✓ Somut Olmayan Miras (Geleneksel sanatların dijital arşivi)</li>
-                    <li>✓ Somut Miras (15 ülkede aktif restorasyon projeleri)</li>
-                    <li>✓ Yaşayan Deneyim (Yerel ustalarla interaktif atölyeler)</li>
-                  </ul>
+                  <div className="flex flex-col md:flex-row justify-center gap-8 mt-6 mb-8">
+                    <div className="bg-white/50 dark:bg-dark/50 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
+                      <div className="text-primary text-2xl mb-2">🏛️</div>
+                      <h3 className="font-bold mb-2">Kültürel Miras</h3>
+                      <p className="text-sm">Somut ve somut olmayan kültürel mirasın korunması</p>
+                    </div>
+                    <div className="bg-white/50 dark:bg-dark/50 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
+                      <div className="text-primary text-2xl mb-2">🌍</div>
+                      <h3 className="font-bold mb-2">Sürdürülebilir Turizm</h3>
+                      <p className="text-sm">Kültürel değerleri koruyan turizm anlayışının geliştirilmesi</p>
+                    </div>
+                    <div className="bg-white/50 dark:bg-dark/50 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
+                      <div className="text-primary text-2xl mb-2">🤝</div>
+                      <h3 className="font-bold mb-2">Uluslararası İşbirliği</h3>
+                      <p className="text-sm">Kültürlerarası diyalog ve işbirliğinin güçlendirilmesi</p>
+                    </div>
+                  </div>
                   <p className="text-center italic mt-6">
                     'Turizm sadece bir seyahat değil, medeniyetler arası diyalog yolculuğudur' 
-                    felsefesiyle, her taşın altında yatan hikayeyi dünyaya taşıyoruz.
+                    felsefesiyle çalışmalarımızı sürdürüyoruz.
                   </p>
                 </div>
                 <div className="flex flex-col items-center justify-center space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0">
                   <Link
-                    href="#"
+                    href="/about"
                     className="rounded-sm bg-primary px-8 py-4 text-base font-semibold text-white duration-300 ease-in-out hover:bg-primary/80"
                   >
-                    Link 1
+                    Hakkımızda
                   </Link>
                   <Link
-                    href="#"
+                    href="/contact"
                     className="inline-block rounded-sm bg-black px-8 py-4 text-base font-semibold text-white duration-300 ease-in-out hover:bg-black/90 dark:bg-white/10 dark:text-white dark:hover:bg-white/5"
                   >
-                    Link 2
+                    İletişime Geçin
                   </Link>
                 </div>
               </div>
@@ -115,9 +145,9 @@ const Hero = () => {
             <defs>
               <linearGradient
                 id="paint0_linear_25:217"
-                x1="-54.5003"
-                y1="-178"
-                x2="222"
+                x1="277"
+                y1="-162"
+                x2="277"
                 y2="288"
                 gradientUnits="userSpaceOnUse"
               >
@@ -148,10 +178,10 @@ const Hero = () => {
               </radialGradient>
               <linearGradient
                 id="paint3_linear_25:217"
-                x1="226.775"
-                y1="-66.1548"
-                x2="292.157"
-                y2="351.421"
+                x1="325.486"
+                y1="122.87"
+                x2="325.486"
+                y2="482.87"
                 gradientUnits="userSpaceOnUse"
               >
                 <stop stopColor="#4A6CF7" />

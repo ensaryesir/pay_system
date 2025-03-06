@@ -198,6 +198,11 @@ export const isSuperUser = (): boolean => {
   return user?.role === 'superuser';
 };
 
+export const isAdminOrSuperUser = (): boolean => {
+  const user = getCurrentUser();
+  return user?.role === 'admin' || user?.role === 'superuser';
+};
+
 export const getAllUsers = async (): Promise<UsersResponse> => {
   try {
     const token = getToken();

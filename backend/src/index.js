@@ -3,8 +3,10 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const path = require('path');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/auth');
+const blogRoutes = require('./routes/blog');
 
 const app = express();
 
@@ -18,10 +20,13 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Auth routes
-app.use('/api/auth', authRoutes);
+// Serve static files from public directory
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 // Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/blog', blogRoutes);
+
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to Payment System API' });
 });
