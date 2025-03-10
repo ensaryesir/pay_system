@@ -181,6 +181,71 @@ router.patch('/users/:userId/role', isSuperUser, async (req, res) => {
   }
 });
 
+// Update user profile - Authenticated users can update their own profile
+router.put('/profile', protect, async (req, res) => {
+  try {
+    const { name, currentPassword, newPassword } = req.body;
+    const userId = req.user._id;
+
+    // Find the user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Kullanıcı bulunamadı'
+      });
+    }
+
+    // Update name if provided
+    if (name) {
+      user.name = name;
+    }
+
+    // Update password if provided
+    if (newPassword) {
+      // Verify current password
+      if (!currentPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Şifre değişikliği için mevcut şifrenizi girmelisiniz'
+        });
+      }
+
+      const isMatch = await user.comparePassword(currentPassword);
+      if (!isMatch) {
+        return res.status(401).json({
+          success: false,
+          message: 'Mevcut şifreniz yanlış'
+        });
+      }
+
+      // Set new password
+      user.password = newPassword;
+    }
+
+    // Save updated user
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Profil bilgileriniz başarıyla güncellendi',
+      user: {
+        id: user._id,
+        _id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Profil güncellenemedi. Lütfen tekrar deneyiniz.'
+    });
+  }
+});
+
 // Debug route to check token
 router.get('/check-token', protect, async (req, res) => {
   try {
