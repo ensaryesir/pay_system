@@ -2,9 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import SectionTitle from "../Common/SectionTitle";
+import PrivacyPolicyModal from "./PrivacyPolicyModal";
 
 const PaymentForm = () => {
   const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [donationType, setDonationType] = useState("one-time");
   const [amount, setAmount] = useState("");
   const [isCorporate, setIsCorporate] = useState(false);
@@ -19,32 +23,25 @@ const PaymentForm = () => {
   const [cardNumber, setCardNumber] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
   const [cvv, setCvv] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [privacyPolicyOpen, setPrivacyPolicyOpen] = useState(false);
 
-  // Error states
-  const [amountError, setAmountError] = useState("");
-  const [nameError, setNameError] = useState("");
-  const [surnameError, setSurnameError] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [institutionNameError, setInstitutionNameError] = useState("");
-  const [recipientNameError, setRecipientNameError] = useState("");
-  const [recipientSurnameError, setRecipientSurnameError] = useState("");
-  const [cardNumberError, setCardNumberError] = useState("");
-  const [expiryDateError, setExpiryDateError] = useState("");
-  const [cvvError, setCvvError] = useState("");
+  // Önceden tanımlanmış bağış miktarları
+  const predefinedAmounts = [50, 100, 250, 500, 1000];
 
-  // Predefined amounts
-  const predefinedAmounts = [100, 250, 500];
-
-  // Handle predefined amount selection
+  // Önceden tanımlanmış bağış miktarı seçimi
   const handlePredefinedAmount = (value: number) => {
     setAmount(value.toString());
-    setAmountError("");
+    // Seçilen miktar için hata varsa temizle
+    if (errors.amount) {
+      setErrors(prev => ({ ...prev, amount: "" }));
+    }
   };
 
-  // Format card number with spaces
+  // Kart numarası formatı (4 haneli gruplar halinde)
   const formatCardNumber = (value: string) => {
     const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
-    const matches = v.match(/.{4,16}/g);
+    const matches = v.match(/\d{4,16}/g);
     const match = (matches && matches[0]) || "";
     const parts = [];
 
@@ -59,404 +56,467 @@ const PaymentForm = () => {
     }
   };
 
-  // Format expiry date
+  // Son kullanma tarihi formatı (MM/YY)
   const formatExpiryDate = (value: string) => {
     const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
-    if (v.length >= 2) {
-      return v.slice(0, 2) + (v.length > 2 ? "/" + v.slice(2, 4) : "");
+    
+    if (v.length >= 3) {
+      return `${v.substring(0, 2)}/${v.substring(2, 4)}`;
     }
     return v;
   };
 
+  // Form doğrulama
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    // Miktar kontrolü
+    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+      newErrors.amount = "Lütfen geçerli bir bağış miktarı girin";
+    }
+
+    // Kurumsal bağış kontrolü
+    if (isCorporate && !institutionName.trim()) {
+      newErrors.institutionName = "Kurum adı gereklidir";
+    }
+
+    // Kişisel bilgiler kontrolü
+    if (!name.trim()) {
+      newErrors.name = "Ad gereklidir";
+    }
+
+    if (!surname.trim()) {
+      newErrors.surname = "Soyad gereklidir";
+    }
+
+    // E-posta kontrolü
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim() || !emailRegex.test(email)) {
+      newErrors.email = "Geçerli bir e-posta adresi girin";
+    }
+
+    // Başkası adına bağış kontrolü
+    if (donateForSomeone) {
+      if (!recipientName.trim()) {
+        newErrors.recipientName = "Alıcı adı gereklidir";
+      }
+      if (!recipientSurname.trim()) {
+        newErrors.recipientSurname = "Alıcı soyadı gereklidir";
+      }
+    }
+
+    // Kart bilgileri kontrolü
+    const cardNumberWithoutSpaces = cardNumber.replace(/\s/g, "");
+    if (cardNumberWithoutSpaces.length < 16) {
+      newErrors.cardNumber = "Geçerli bir kart numarası girin";
+    }
+
+    const expiryParts = expiryDate.split("/");
+    if (expiryParts.length !== 2 || expiryParts[0].length !== 2 || expiryParts[1].length !== 2) {
+      newErrors.expiryDate = "Geçerli bir son kullanma tarihi girin (AA/YY)";
+    } else {
+      const month = parseInt(expiryParts[0], 10);
+      const year = parseInt(`20${expiryParts[1]}`, 10);
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth() + 1;
+
+      if (month < 1 || month > 12) {
+        newErrors.expiryDate = "Geçersiz ay";
+      } else if (year < currentYear || (year === currentYear && month < currentMonth)) {
+        newErrors.expiryDate = "Kartınızın süresi dolmuş";
+      }
+    }
+
+    if (cvv.length < 3) {
+      newErrors.cvv = "Geçerli bir CVV kodu girin";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Form gönderimi
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    let isValid = true;
-
-    // Validate amount
-    if (!amount || parseFloat(amount) <= 0) {
-      setAmountError("Lütfen geçerli bir bağış miktarı girin.");
-      isValid = false;
-    } else {
-      setAmountError("");
+    
+    if (!validateForm()) {
+      toast.error("Lütfen formdaki hataları düzeltin");
+      return;
     }
 
-    // Validate credit card fields
-    if (!cardNumber || cardNumber.replace(/\s/g, "").length !== 16) {
-      setCardNumberError("Geçerli bir kart numarası girin.");
-      isValid = false;
-    } else {
-      setCardNumberError("");
-    }
+    setIsSubmitting(true);
 
-    if (!expiryDate || !/^\d{2}\/\d{2}$/.test(expiryDate)) {
-      setExpiryDateError("Geçerli bir son kullanma tarihi girin (AA/YY).");
-      isValid = false;
-    } else {
-      setExpiryDateError("");
-    }
-
-    if (!cvv || !/^\d{3,4}$/.test(cvv)) {
-      setCvvError("Geçerli bir CVV kodu girin.");
-      isValid = false;
-    } else {
-      setCvvError("");
-    }
-
-    // Validate name fields
-    if (isCorporate) {
-      if (!institutionName) {
-        setInstitutionNameError("Kurum adı zorunludur.");
-        isValid = false;
-      }
-    } else {
-      if (!name) {
-        setNameError("Ad alanı zorunludur.");
-        isValid = false;
-      }
-      if (!surname) {
-        setSurnameError("Soyad alanı zorunludur.");
-        isValid = false;
-      }
-    }
-
-    // Validate email
-    if (!email || !/\S+@\S+\.\S+/.test(email)) {
-      setEmailError("Geçerli bir e-posta adresi girin.");
-      isValid = false;
-    } else {
-      setEmailError("");
-    }
-
-    // Validate recipient fields if donating for someone
-    if (donateForSomeone) {
-      if (!recipientName) {
-        setRecipientNameError("Alıcı adı zorunludur.");
-        isValid = false;
-      }
-      if (!recipientSurname) {
-        setRecipientSurnameError("Alıcı soyadı zorunludur.");
-        isValid = false;
-      }
-    }
-
-    if (!isValid) return;
-
-    // Process form submission
     try {
-      const formData = {
+      // Import the payment service
+      const { processPayment } = await import('@/services/paymentService');
+      
+      // Prepare payment data
+      const paymentData = {
         donationType,
-        amount: parseFloat(amount),
+        amount,
         isCorporate,
-        name: isCorporate ? institutionName : name,
+        institutionName: isCorporate ? institutionName : undefined,
+        name,
         surname,
         email,
         donateForSomeone,
-        recipientName,
-        recipientSurname,
-        deductionDay: donationType === "monthly" ? deductionDay : undefined,
+        recipientName: donateForSomeone ? recipientName : undefined,
+        recipientSurname: donateForSomeone ? recipientSurname : undefined,
+        deductionDay: donationType === 'monthly' ? deductionDay : undefined,
+        cardNumber,
+        expiryDate,
+        cvv
       };
-
-      const response = await fetch('http://localhost:5000/api/payments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Payment processing failed');
+      
+      // Process payment through API
+      const response = await processPayment(paymentData);
+      
+      if (response.success) {
+        toast.success("Bağışınız için teşekkür ederiz!");
+        // Teşekkür sayfasına yönlendirme
+        router.push("/thank-you");
+      } else {
+        toast.error(response.message || "Ödeme işlemi sırasında bir hata oluştu. Lütfen tekrar deneyin.");
       }
-
-      const result = await response.json();
-      console.log('Payment successful:', result);
-      router.push('/success');
-
     } catch (error) {
-      console.error("Payment error:", error);
+      console.error("Ödeme işlemi sırasında bir hata oluştu:", error);
+      toast.error("Ödeme işlemi sırasında bir hata oluştu. Lütfen tekrar deneyin.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <section className="py-16 md:py-20 lg:py-28">
+    <section className="relative z-10 py-16 md:py-20 lg:py-28">
       <div className="container">
-        <div className="relative mx-auto max-w-2xl rounded-lg bg-white p-8 shadow-lg dark:bg-dark">
-          <h2 className="mb-8 text-center text-3xl font-bold text-dark dark:text-white">
-            Bağış Yap
-          </h2>
+        <SectionTitle
+          title="Bağış Yap"
+          paragraph="Derneğimize yapacağınız bağışlar, kültürel mirasın korunması ve sürdürülebilir turizm projelerine destek olacaktır."
+          center
+          width="665px"
+        />
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Donation Type Selector */}
-            <div className="flex rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
-              <button
-                type="button"
-                onClick={() => setDonationType("one-time")}
-                className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${donationType === "one-time" ? "bg-primary text-white" : "text-gray-600 hover:text-dark dark:text-gray-300 dark:hover:text-white"}`}
-              >
-                Tek Seferlik Bağış
-              </button>
-              <button
-                type="button"
-                onClick={() => setDonationType("monthly")}
-                className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${donationType === "monthly" ? "bg-primary text-white" : "text-gray-600 hover:text-dark dark:text-gray-300 dark:hover:text-white"}`}
-              >
-                Aylık Bağış
-              </button>
-            </div>
+        {/* Privacy Policy Modal */}
+        <PrivacyPolicyModal 
+          isOpen={privacyPolicyOpen} 
+          onClose={() => setPrivacyPolicyOpen(false)} 
+        />
 
-            {/* Amount Input with Quick Selection */}
-            <div>
-              <label className="mb-2.5 block font-medium text-dark dark:text-white">
-                Bağış Miktarı (TL)
-              </label>
-              <div className="flex gap-4">
-                <input
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="flex-1 rounded-lg border border-transparent bg-gray-100 px-4 py-3 text-dark placeholder-gray-500 transition focus:border-primary focus:outline-none dark:bg-gray-800 dark:text-white"
-                  placeholder="0.00"
-                />
-                <div className="flex gap-2">
-                  {predefinedAmounts.map((value) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => handlePredefinedAmount(value)}
-                      className="rounded-lg bg-gray-100 px-4 py-3 text-dark transition hover:bg-primary hover:text-white dark:bg-gray-800 dark:text-white"
-                    >
-                      {value}TL
-                    </button>
-                  ))}
-                </div>
+        <div className="mx-auto max-w-[800px] rounded-md bg-white p-6 shadow-md dark:bg-dark sm:p-10">
+          <form onSubmit={handleSubmit}>
+            {/* Bağış Türü Seçimi */}
+            <div className="mb-8">
+              <h3 className="mb-4 text-xl font-bold text-black dark:text-white">Bağış Türü</h3>
+              <div className="flex flex-wrap gap-4">
+                <label className={`flex cursor-pointer items-center rounded-md border p-3 ${donationType === "one-time" ? "border-primary bg-primary/5" : "border-gray-300 dark:border-gray-600"}`}>
+                  <input
+                    type="radio"
+                    name="donationType"
+                    value="one-time"
+                    checked={donationType === "one-time"}
+                    onChange={() => setDonationType("one-time")}
+                    className="mr-2 h-4 w-4 accent-primary"
+                  />
+                  <span>Tek Seferlik Bağış</span>
+                </label>
+                <label className={`flex cursor-pointer items-center rounded-md border p-3 ${donationType === "monthly" ? "border-primary bg-primary/5" : "border-gray-300 dark:border-gray-600"}`}>
+                  <input
+                    type="radio"
+                    name="donationType"
+                    value="monthly"
+                    checked={donationType === "monthly"}
+                    onChange={() => setDonationType("monthly")}
+                    className="mr-2 h-4 w-4 accent-primary"
+                  />
+                  <span>Aylık Düzenli Bağış</span>
+                </label>
               </div>
-              {amountError && (
-                <p className="mt-1 text-sm text-red-500">{amountError}</p>
-              )}
             </div>
 
-            {/* Corporate Checkbox */}
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="corporate"
-                checked={isCorporate}
-                onChange={(e) => setIsCorporate(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <label
-                htmlFor="corporate"
-                className="text-sm font-medium text-dark dark:text-white"
-              >
-                Kurumsal Bağışçı
-              </label>
-            </div>
-
-            {/* Donor Information */}
-            {isCorporate ? (
+            {/* Bağış Miktarı */}
+            <div className="mb-8">
+              <h3 className="mb-4 text-xl font-bold text-black dark:text-white">Bağış Miktarı</h3>
+              <div className="mb-4 flex flex-wrap gap-2">
+                {predefinedAmounts.map((preAmount) => (
+                  <button
+                    key={preAmount}
+                    type="button"
+                    onClick={() => handlePredefinedAmount(preAmount)}
+                    className={`rounded-md px-4 py-2 ${
+                      amount === preAmount.toString()
+                        ? "bg-primary text-white"
+                        : "bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                    }`}
+                  >
+                    {preAmount} ₺
+                  </button>
+                ))}
+              </div>
               <div>
-                <label className="mb-2.5 block font-medium text-dark dark:text-white">
-                  Kurum Adı
+                <label htmlFor="amount" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Diğer Miktar (₺)
                 </label>
                 <input
-                  type="text"
-                  value={institutionName}
-                  onChange={(e) => setInstitutionName(e.target.value)}
-                  className="w-full rounded-lg border border-transparent bg-gray-100 px-4 py-3 text-dark placeholder-gray-500 transition focus:border-primary focus:outline-none dark:bg-gray-800 dark:text-white"
+                  type="number"
+                  id="amount"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="Bağış miktarı girin"
+                  className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-gray-600 dark:bg-[#242B51] dark:text-white"
                 />
-                {institutionNameError && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {institutionNameError}
-                  </p>
-                )}
+                {errors.amount && <p className="mt-1 text-sm text-red-500">{errors.amount}</p>}
               </div>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2">
+            </div>
+
+            {/* Bağışçı Bilgileri */}
+            <div className="mb-8">
+              <h3 className="mb-4 text-xl font-bold text-black dark:text-white">Bağışçı Bilgileri</h3>
+              
+              {/* Kurumsal/Bireysel Seçimi */}
+              <div className="mb-4">
+                <label className="mb-2 flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={isCorporate}
+                    onChange={() => setIsCorporate(!isCorporate)}
+                    className="mr-2 h-4 w-4 accent-primary"
+                  />
+                  <span>Kurumsal bağış yapmak istiyorum</span>
+                </label>
+              </div>
+
+              {/* Kurumsal Bağış Alanları */}
+              {isCorporate && (
+                <div className="mb-4">
+                  <label htmlFor="institutionName" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Kurum Adı
+                  </label>
+                  <input
+                    type="text"
+                    id="institutionName"
+                    value={institutionName}
+                    onChange={(e) => setInstitutionName(e.target.value)}
+                    placeholder="Kurum adını girin"
+                    className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-gray-600 dark:bg-[#242B51] dark:text-white"
+                  />
+                  {errors.institutionName && <p className="mt-1 text-sm text-red-500">{errors.institutionName}</p>}
+                </div>
+              )}
+
+              {/* Kişisel Bilgiler */}
+              <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-2.5 block font-medium text-dark dark:text-white">
+                  <label htmlFor="name" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Ad
                   </label>
                   <input
                     type="text"
+                    id="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full rounded-lg border border-transparent bg-gray-100 px-4 py-3 text-dark placeholder-gray-500 transition focus:border-primary focus:outline-none dark:bg-gray-800 dark:text-white"
+                    placeholder="Adınız"
+                    className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-gray-600 dark:bg-[#242B51] dark:text-white"
                   />
-                  {nameError && (
-                    <p className="mt-1 text-sm text-red-500">{nameError}</p>
-                  )}
+                  {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
                 </div>
                 <div>
-                  <label className="mb-2.5 block font-medium text-dark dark:text-white">
+                  <label htmlFor="surname" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Soyad
                   </label>
                   <input
                     type="text"
+                    id="surname"
                     value={surname}
                     onChange={(e) => setSurname(e.target.value)}
-                    className="w-full rounded-lg border border-transparent bg-gray-100 px-4 py-3 text-dark placeholder-gray-500 transition focus:border-primary focus:outline-none dark:bg-gray-800 dark:text-white"
+                    placeholder="Soyadınız"
+                    className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-gray-600 dark:bg-[#242B51] dark:text-white"
                   />
-                  {surnameError && (
-                    <p className="mt-1 text-sm text-red-500">{surnameError}</p>
-                  )}
+                  {errors.surname && <p className="mt-1 text-sm text-red-500">{errors.surname}</p>}
                 </div>
               </div>
-            )}
 
-            {/* Email Input */}
-            <div>
-              <label className="mb-2.5 block font-medium text-dark dark:text-white">
-                E-posta
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-lg border border-transparent bg-gray-100 px-4 py-3 text-dark placeholder-gray-500 transition focus:border-primary focus:outline-none dark:bg-gray-800 dark:text-white"
-              />
-              {emailError && (
-                <p className="mt-1 text-sm text-red-500">{emailError}</p>
+              <div className="mb-4">
+                <label htmlFor="email" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  E-posta
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="E-posta adresiniz"
+                  className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-gray-600 dark:bg-[#242B51] dark:text-white"
+                />
+                {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
+              </div>
+
+              {/* Başkası Adına Bağış */}
+              <div className="mb-4">
+                <label className="mb-2 flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={donateForSomeone}
+                    onChange={() => setDonateForSomeone(!donateForSomeone)}
+                    className="mr-2 h-4 w-4 accent-primary"
+                  />
+                  <span>Başkası adına bağış yapmak istiyorum</span>
+                </label>
+              </div>
+
+              {donateForSomeone && (
+                <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="recipientName" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Alıcı Adı
+                    </label>
+                    <input
+                      type="text"
+                      id="recipientName"
+                      value={recipientName}
+                      onChange={(e) => setRecipientName(e.target.value)}
+                      placeholder="Alıcının adı"
+                      className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-gray-600 dark:bg-[#242B51] dark:text-white"
+                    />
+                    {errors.recipientName && <p className="mt-1 text-sm text-red-500">{errors.recipientName}</p>}
+                  </div>
+                  <div>
+                    <label htmlFor="recipientSurname" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Alıcı Soyadı
+                    </label>
+                    <input
+                      type="text"
+                      id="recipientSurname"
+                      value={recipientSurname}
+                      onChange={(e) => setRecipientSurname(e.target.value)}
+                      placeholder="Alıcının soyadı"
+                      className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-gray-600 dark:bg-[#242B51] dark:text-white"
+                    />
+                    {errors.recipientSurname && <p className="mt-1 text-sm text-red-500">{errors.recipientSurname}</p>}
+                  </div>
+                </div>
+              )}
+
+              {/* Aylık Bağış için Tahsilat Günü */}
+              {donationType === "monthly" && (
+                <div className="mb-4">
+                  <label htmlFor="deductionDay" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Aylık Tahsilat Günü
+                  </label>
+                  <select
+                    id="deductionDay"
+                    value={deductionDay}
+                    onChange={(e) => setDeductionDay(Number(e.target.value))}
+                    className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-gray-600 dark:bg-[#242B51] dark:text-white"
+                  >
+                    {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
+                      <option key={day} value={day}>
+                        {day}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               )}
             </div>
 
-            {/* Donate for Someone Checkbox */}
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="donateForSomeone"
-                checked={donateForSomeone}
-                onChange={(e) => setDonateForSomeone(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <label
-                htmlFor="donateForSomeone"
-                className="text-sm font-medium text-dark dark:text-white"
-              >
-                Başkası Adına Bağış
-              </label>
-            </div>
-
-            {/* Recipient Information */}
-            {donateForSomeone && (
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="mb-2.5 block font-medium text-dark dark:text-white">
-                    Alıcı Adı
-                  </label>
-                  <input
-                    type="text"
-                    value={recipientName}
-                    onChange={(e) => setRecipientName(e.target.value)}
-                    className="w-full rounded-lg border border-transparent bg-gray-100 px-4 py-3 text-dark placeholder-gray-500 transition focus:border-primary focus:outline-none dark:bg-gray-800 dark:text-white"
-                  />
-                  {recipientNameError && (
-                    <p className="mt-1 text-sm text-red-500">
-                      {recipientNameError}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="mb-2.5 block font-medium text-dark dark:text-white">
-                    Alıcı Soyadı
-                  </label>
-                  <input
-                    type="text"
-                    value={recipientSurname}
-                    onChange={(e) => setRecipientSurname(e.target.value)}
-                    className="w-full rounded-lg border border-transparent bg-gray-100 px-4 py-3 text-dark placeholder-gray-500 transition focus:border-primary focus:outline-none dark:bg-gray-800 dark:text-white"
-                  />
-                  {recipientSurnameError && (
-                    <p className="mt-1 text-sm text-red-500">
-                      {recipientSurnameError}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Monthly Deduction Day */}
-            {donationType === "monthly" && (
-              <div>
-                <label className="mb-2.5 block font-medium text-dark dark:text-white">
-                  Aylık Ödeme Günü
-                </label>
-                <select
-                  value={deductionDay}
-                  onChange={(e) => setDeductionDay(parseInt(e.target.value))}
-                  className="w-full rounded-lg border border-transparent bg-gray-100 px-4 py-3 text-dark transition focus:border-primary focus:outline-none dark:bg-gray-800 dark:text-white"
-                >
-                  {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
-                    <option key={day} value={day}>
-                      {day}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Credit Card Information */}
-            <div className="space-y-4">
-              <div>
-                <label className="mb-2.5 block font-medium text-dark dark:text-white">
+            {/* Ödeme Bilgileri */}
+            <div className="mb-8">
+              <h3 className="mb-4 text-xl font-bold text-black dark:text-white">Ödeme Bilgileri</h3>
+              
+              <div className="mb-4">
+                <label htmlFor="cardNumber" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Kart Numarası
                 </label>
                 <input
                   type="text"
+                  id="cardNumber"
                   value={cardNumber}
                   onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+                  placeholder="1234 5678 9012 3456"
                   maxLength={19}
-                  className="w-full rounded-lg border border-transparent bg-gray-100 px-4 py-3 text-dark placeholder-gray-500 transition focus:border-primary focus:outline-none dark:bg-gray-800 dark:text-white"
-                  placeholder="**** **** **** ****"
+                  className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-gray-600 dark:bg-[#242B51] dark:text-white"
                 />
-                {cardNumberError && (
-                  <p className="mt-1 text-sm text-red-500">{cardNumberError}</p>
-                )}
+                {errors.cardNumber && <p className="mt-1 text-sm text-red-500">{errors.cardNumber}</p>}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="mb-4 grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-2.5 block font-medium text-dark dark:text-white">
+                  <label htmlFor="expiryDate" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Son Kullanma Tarihi
                   </label>
                   <input
                     type="text"
+                    id="expiryDate"
                     value={expiryDate}
                     onChange={(e) => setExpiryDate(formatExpiryDate(e.target.value))}
-                    maxLength={5}
-                    className="w-full rounded-lg border border-transparent bg-gray-100 px-4 py-3 text-dark placeholder-gray-500 transition focus:border-primary focus:outline-none dark:bg-gray-800 dark:text-white"
                     placeholder="AA/YY"
+                    maxLength={5}
+                    className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-gray-600 dark:bg-[#242B51] dark:text-white"
                   />
-                  {expiryDateError && (
-                    <p className="mt-1 text-sm text-red-500">{expiryDateError}</p>
-                  )}
+                  {errors.expiryDate && <p className="mt-1 text-sm text-red-500">{errors.expiryDate}</p>}
                 </div>
-
                 <div>
-                  <label className="mb-2.5 block font-medium text-dark dark:text-white">
+                  <label htmlFor="cvv" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     CVV
                   </label>
                   <input
                     type="text"
+                    id="cvv"
                     value={cvv}
-                    onChange={(e) => setCvv(e.target.value.replace(/\D/g, ""))}
+                    onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                    placeholder="123"
                     maxLength={4}
-                    className="w-full rounded-lg border border-transparent bg-gray-100 px-4 py-3 text-dark placeholder-gray-500 transition focus:border-primary focus:outline-none dark:bg-gray-800 dark:text-white"
-                    placeholder="***"
+                    className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-gray-600 dark:bg-[#242B51] dark:text-white"
                   />
-                  {cvvError && (
-                    <p className="mt-1 text-sm text-red-500">{cvvError}</p>
-                  )}
+                  {errors.cvv && <p className="mt-1 text-sm text-red-500">{errors.cvv}</p>}
                 </div>
               </div>
             </div>
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              className="w-full rounded-lg bg-primary px-8 py-4 text-base font-semibold text-white transition duration-300 ease-in-out hover:bg-opacity-80 hover:shadow-signUp"
-            >
-              Bağış Yap
-            </button>
+            {/* Güvenlik Notu */}
+            <div className="mb-8 rounded-md bg-gray-50 p-4 text-sm dark:bg-gray-800">
+              <p className="mb-2 font-medium">Güvenlik Bilgisi:</p>
+              <p>
+                • Tüm ödeme bilgileriniz SSL sertifikası ile şifrelenerek korunmaktadır.<br />
+                • Kart bilgileriniz sistemimizde saklanmaz, sadece ödeme işlemi için kullanılır.<br />
+                • Aylık bağışlar için, belirttiğiniz günde kartınızdan otomatik tahsilat yapılacaktır.<br />
+                • İstediğiniz zaman düzenli bağışınızı durdurabilirsiniz.
+              </p>
+            </div>
+
+            {/* Onay ve Gönder */}
+            <div className="mb-8">
+              <label className="mb-4 flex items-start">
+                <input
+                  type="checkbox"
+                  required
+                  className="mr-2 mt-1 h-4 w-4 accent-primary"
+                />
+                <span className="text-sm">
+                  Kişisel verilerimin işlenmesine ilişkin <button type="button" onClick={() => setPrivacyPolicyOpen(true)} className="text-primary hover:underline">Aydınlatma Metni</button>'ni okudum ve anladım. Kişisel verilerimin belirtilen amaçlar doğrultusunda işlenmesini onaylıyorum.
+                </span>
+              </label>
+            </div>
+
+            <div>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full rounded-md bg-primary px-5 py-3 text-base font-medium text-white transition duration-300 ease-in-out hover:bg-primary/90 disabled:bg-gray-400"
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="mr-2 h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    İşleniyor...
+                  </span>
+                ) : (
+                  `${donationType === "one-time" ? "Tek Seferlik" : "Aylık"} Bağış Yap`
+                )}
+              </button>
+            </div>
           </form>
         </div>
       </div>

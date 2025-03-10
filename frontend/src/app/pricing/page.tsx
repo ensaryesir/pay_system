@@ -1,26 +1,25 @@
 import Breadcrumb from "@/components/Common/Breadcrumb";
-import Pricing from "@/components/Pricing";
+import PaymentForm from "@/components/Pricing";
 
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Fiyatlandırma | Uluslararası Kültür ve Turizm Derneği",
-  description: "Uluslararası Kültür ve Turizm Derneği üyelik paketleri ve fiyatlandırma seçenekleri. Kültürel deneyimlere erişim için üyelik fırsatlarını keşfedin.",
+  title: "Bağış Yap | Uluslararası Kültür ve Turizm Derneği",
+  description: "Uluslararası Kültür ve Turizm Derneği'ne bağış yaparak kültürel mirasın korunmasına ve sürdürülebilir turizm projelerine destek olun.",
   keywords: [
-    "üyelik paketleri",
-    "fiyatlandırma",
-    "kültür derneği üyeliği",
-    "turizm etkinlikleri",
-    "üyelik avantajları",
-    "kültürel deneyimler"
+    "bağış yap", 
+    "kültür derneği bağış", 
+    "turizm derneği destek", 
+    "kültürel miras koruma", 
+    "sürdürülebilir turizm desteği"
   ],
   authors: [{ name: "Uluslararası Kültür ve Turizm Derneği", url: "https://ornekdernek.com" }],
   openGraph: {
     type: "website",
-    url: "https://ornekdernek.com/pricing",
-    title: "Üyelik Paketleri | Kültür ve Turizm Fırsatları",
-    description: "Kültürel deneyimlere erişim için üyelik seçeneklerimizi inceleyin.",
-    siteName: "Uluslararası Kültür ve Turizm Derneği",
+    url: "https://ornekdernek.com/bagis",
+    title: "Bağış Yap | Uluslararası Kültür ve Turizm Derneği",
+    description: "Kültürel mirasın korunması ve sürdürülebilir turizm projelerine destek olmak için bağış yapın.",
+    images: [{ url: "/images/bagis-og.jpg" }]
   },
 };
 
@@ -28,10 +27,11 @@ const PricingPage = () => {
   return (
     <>
       <Breadcrumb
-        pageName="Fiyatlandırma"
-        description="Derneğimizin sunduğu üyelik paketleri ve fiyatlandırma seçeneklerini inceleyin. Size en uygun paketi seçerek kültürel deneyimlere erişim sağlayın."
+        pageName="Bağış Yap"
+        description="Derneğimize bağış yaparak kültürel mirasın korunmasına ve sürdürülebilir turizm projelerine destek olabilirsiniz."
       />
-      <Pricing />
+
+      <PaymentForm />
     </>
   );
 };

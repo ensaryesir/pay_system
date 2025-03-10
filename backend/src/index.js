@@ -26,22 +26,12 @@ app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/blog', blogRoutes);
+app.use('/api/payments', require('./routes/payment'));
 
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to Payment System API' });
 });
 
-// Payment routes
-app.post('/api/payments', async (req, res) => {
-  try {
-    const paymentData = req.body;
-    // TODO: Implement payment processing logic
-    res.status(201).json({ message: 'Payment processed successfully', data: paymentData });
-  } catch (error) {
-    console.error('Payment processing error:', error);
-    res.status(500).json({ message: 'Payment processing failed' });
-  }
-});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
